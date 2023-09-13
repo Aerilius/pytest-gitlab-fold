@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-travis-fold"
+authors = [
+    {name = "Eldar Abusalimov", email = "eldar.abusalimov@gmail.com"},
+]
+description = "Folds captured output sections in Travis CI build log"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Testing",
+]
+keywords = ["pytest", "travis", "build", "logs", "continuous", "integration"]
+dependencies = [
+    "pytest>=2.6.0",
+]
+
+dynamic = ["readme", "version"]
+
+[project.entry-points.pytest11]
+travis-fold = "pytest_travis_fold"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.urls]
+Repository = "https://github.com/abusalimov/pytest-travis-fold"
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[tool.setuptools]
+packages = ["pytest_travis_fold"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pytest_travis_fold.__version__"}
+readme = {file = "README.md", content-type = "text/markdown"}
+
+[tool.black]
+line-length = 80
+target-version = ['py38']
+skip-magic-trailing-comma = true
+include = '\.(pyi?|ipynb)$'
+exclude = '''
+^/(
+  (
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.mypy_cache
+    | \.pytest_cache
+    | build
+    | dist
+  )
+)/
+'''
+
+[tool.isort]
+combine_as_imports = true
+filter_files = true
+line_length = 80
+profile = "black"
+
+[tool.pycln]
+all = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+# CLI options: Show extra test summary for all except passed; quiet; colored output
+addopts = "-ra --quiet --color=yes --code-highlight=yes"
