@@ -13,7 +13,7 @@ travis_mark_regexes = ["travis_fold:start:.*", "travis_fold:end:.*"]
 
 
 @pytest.fixture
-def failtest(testdir: Testdir) -> Callable[[str], RunResult]:
+def run_failing_test(testdir: Testdir) -> Callable[[str], RunResult]:
     testdir.makepyfile(
         """
 def test_something():
@@ -42,11 +42,11 @@ def test_something():
         ),
     ],
 )
-def test_no_travis_env(args, failtest, monkeypatch):
+def test_no_travis_env(args, run_failing_test, monkeypatch):
     """Check cmdline options on a dev env (no TRAVIS variable)."""
     monkeypatch.delenv("TRAVIS", raising=False)
 
-    failtest(*args).stdout.re_match_lines(travis_mark_regexes)
+    run_failing_test(*args).stdout.re_match_lines(travis_mark_regexes)
 
 
 @pytest.mark.parametrize(
@@ -61,8 +61,8 @@ def test_no_travis_env(args, failtest, monkeypatch):
         ),
     ],
 )
-def test_travis_env(args, failtest, monkeypatch):
+def test_travis_env(args, run_failing_test, monkeypatch):
     """Set TRAVIS=true and check the stdout section is properly wrapped."""
     monkeypatch.setenv("TRAVIS", "true")
 
-    failtest(*args).stdout.re_match_lines(travis_mark_regexes)
+    run_failing_test(*args).stdout.re_match_lines(travis_mark_regexes)

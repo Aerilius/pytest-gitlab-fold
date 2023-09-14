@@ -28,11 +28,11 @@ def test_something(travis):
 
 @pytest.fixture(scope="module")
 def travis_force(request, travis):
-    saved_fold_enabled = travis.fold_enabled
+    originally_fold_enabled = travis.fold_enabled
 
     @request.addfinalizer
     def restore_fold_enabled():
-        travis.fold_enabled = saved_fold_enabled
+        travis.fold_enabled = originally_fold_enabled
 
     travis.fold_enabled = True
     return travis
