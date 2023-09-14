@@ -280,7 +280,22 @@ def pytest_configure(config):
             """
             Patched _pytest.terminal.TerminalReporter._outrep_summary().
             """
-            rep.toterminal(reporter._tw)
+            # Report of an individual test case (failed, passed, skipped)
+            has_content = rep.longrepr
+            start = int(getattr(rep, "start", 0))
+            stop = int(getattr(rep, "stop", getattr(rep, "duration", 0)))
+            with gitlab.folding_output(
+                title=rep.head_line,
+                timestamp_start=start,
+                timestamp_end=stop,
+                collapsed=not rep.failed,
+                file=reporter._tw,
+                # Don't fold if there's nothing to fold.
+                force=(False if not has_content else None),
+            ):
+                rep.toterminal(reporter._tw)
+
+            # Optional sections like stdout, stderr, log
             for secname, content in rep.sections:
                 title = secname
 
