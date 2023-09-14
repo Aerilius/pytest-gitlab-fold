@@ -284,13 +284,6 @@ def pytest_configure(config):
             for secname, content in rep.sections:
                 title = secname
 
-                # Shorten the most common case:
-                # 'Captured stdout call' -> 'stdout'.
-                if title.startswith("Captured "):
-                    title = title[len("Captured ") :]
-                if title.endswith(" call"):
-                    title = title[: -len(" call")]
-
                 if content[-1:] == "\n":
                     content = content[:-1]
 
