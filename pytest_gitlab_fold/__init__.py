@@ -322,9 +322,9 @@ def pytest_configure(config):
         def patched_summary_warnings():
             final = reporter._already_displayed_warnings is not None
             title = "warnings summary (final)" if final else "warnings summary"
-            has_warnings = reporter.hasopt("w") and reporter.stats.get(
-                "warnings"
-            )
+            n_warnings = len(reporter.stats.get("warnings") or [])
+            n_displayed: int = reporter._already_displayed_warnings or 0
+            has_warnings = reporter.hasopt("w") and n_warnings - n_displayed > 0
             with gitlab.folding_output(
                 title=title,
                 collapsed=True,
@@ -336,6 +336,24 @@ def pytest_configure(config):
 
         reporter.summary_warnings = update_wrapper(
             patched_summary_warnings, reporter.summary_warnings
+        )
+
+    if hasattr(reporter, "short_test_summary"):
+        orig_short_test_summary = reporter.short_test_summary
+
+        def patched_short_test_summary():
+            has_summaries = reporter.reportchars
+            with gitlab.folding_output(
+                title="short test summary info",
+                collapsed=False,
+                file=reporter._tw,
+                # Don't fold if there's nothing to fold.
+                force=(False if not has_summaries else None),
+            ):
+                orig_short_test_summary()
+
+        reporter.short_test_summary = update_wrapper(
+            patched_short_test_summary, reporter.short_test_summary
         )
 
     cov = config.pluginmanager.getplugin("_cov")
