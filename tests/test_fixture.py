@@ -1,9 +1,9 @@
+import re
 import sys
-from fnmatch import fnmatchcase
 
 import pytest
 
-travis_lines = ["travis_fold:start:*", "travis_fold:end:*"]
+travis_mark_regexes = ["travis_fold:start:.*", "travis_fold:end:.*"]
 
 
 def test_travis_fixture_registered(testdir):
@@ -47,7 +47,9 @@ def assert_lines_folded(lines, line_end):
     else:
         assert all(not mark.endswith("\n") for mark in marks)
 
-    assert all(fnmatchcase(mark, pat) for mark, pat in zip(marks, travis_lines))
+    assert all(
+        re.match(regex, mark) for mark, regex in zip(marks, travis_mark_regexes)
+    )
 
 
 def assert_string_folded(string, line_end=""):
