@@ -316,6 +316,28 @@ def pytest_configure(config):
             patched_outrep_summary, reporter._outrep_summary
         )
 
+    if hasattr(reporter, "summary_warnings"):
+        orig_summary_warnings = reporter.summary_warnings
+
+        def patched_summary_warnings():
+            final = reporter._already_displayed_warnings is not None
+            title = "warnings summary (final)" if final else "warnings summary"
+            has_warnings = reporter.hasopt("w") and reporter.stats.get(
+                "warnings"
+            )
+            with gitlab.folding_output(
+                title=title,
+                collapsed=True,
+                file=reporter._tw,
+                # Don't fold if there's nothing to fold.
+                force=(False if not has_warnings else None),
+            ):
+                orig_summary_warnings()
+
+        reporter.summary_warnings = update_wrapper(
+            patched_summary_warnings, reporter.summary_warnings
+        )
+
     cov = config.pluginmanager.getplugin("_cov")
     # We can't patch CovPlugin.pytest_terminal_summary() (which would fit
     # perfectly), since it is already registered by the plugin manager and
