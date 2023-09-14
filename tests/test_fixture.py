@@ -52,7 +52,7 @@ def assert_lines_folded(lines, line_end):
     )
 
 
-def assert_string_folded(string, line_end=""):
+def assert_string_folded(string, line_end):
     assert string
 
     if line_end:
@@ -64,37 +64,49 @@ def assert_string_folded(string, line_end=""):
     if all(string_lines[1:-1]):
         assert "\n\n" not in string
 
-    assert_lines_folded(string_lines)
+    assert_lines_folded(string_lines, "")
 
 
-def test_fold_lines(travis_force):
-    assert_lines_folded(travis_force.fold_lines([], line_end="\n"), "\n")
-    assert_lines_folded(travis_force.fold_lines([""], line_end="\n"), "\n")
-    assert_lines_folded(travis_force.fold_lines(["\n"], line_end=""))
-    assert_lines_folded(travis_force.fold_lines(["Aww!"], line_end="\n"), "\n")
-    assert_lines_folded(travis_force.fold_lines(["Aww!\n"], line_end=""))
+@pytest.mark.parametrize(
+    ("lines", "line_end"),
+    [
+        ([], "\n"),
+        ([""], "\n"),
+        (["\n"], ""),
+        (["Aww!"], "\n"),
+        (["Aww!\n"], ""),
+    ],
+)
+def test_fold_lines(lines, line_end, travis_force):
+    actual = travis_force.fold_lines(lines, line_end=line_end)
+    assert_lines_folded(actual, line_end)
 
 
-def test_fold_lines_detect_nl(travis_force):
-    assert_lines_folded(travis_force.fold_lines([]))
-    assert_lines_folded(travis_force.fold_lines([""]))
-    assert_lines_folded(travis_force.fold_lines(["\n"]), "\n")
-    assert_lines_folded(travis_force.fold_lines(["Aww!"]))
-    assert_lines_folded(travis_force.fold_lines(["Aww!\n"]), "\n")
+@pytest.mark.parametrize(
+    ("lines", "line_end"),
+    [([], ""), ([""], ""), (["\n"], "\n"), (["Aww!"], ""), (["Aww!\n"], "\n")],
+)
+def test_fold_lines_detect_line_end(lines, line_end, travis_force):
+    actual = travis_force.fold_lines(lines)
+    assert_lines_folded(actual, line_end)
 
 
-def test_fold_string(travis_force):
-    assert_string_folded(travis_force.fold_string("", line_end="\n"), "\n")
-    assert_string_folded(travis_force.fold_string("\n", line_end=""))
-    assert_string_folded(travis_force.fold_string("Woo!", line_end="\n"), "\n")
-    assert_string_folded(travis_force.fold_string("Woo!\n", line_end=""))
+@pytest.mark.parametrize(
+    ("string", "line_end"),
+    [("", "\n"), ("\n", ""), ("Woo!", "\n"), ("Woo!\n", "")],
+)
+def test_fold_string(string, line_end, travis_force):
+    actual = travis_force.fold_string(string, line_end=line_end)
+    assert_string_folded(actual, line_end)
 
 
-def test_fold_string_detect_nl(travis_force):
-    assert_string_folded(travis_force.fold_string(""))
-    assert_string_folded(travis_force.fold_string("\n"), "\n")
-    assert_string_folded(travis_force.fold_string("Woo!"))
-    assert_string_folded(travis_force.fold_string("Woo!\n"), "\n")
+@pytest.mark.parametrize(
+    ("string", "line_end"),
+    [("", ""), ("\n", "\n"), ("Woo!", ""), ("Woo!\n", "\n")],
+)
+def test_fold_string_detect_line_end(string, line_end, travis_force):
+    actual = travis_force.fold_string(string)
+    assert_string_folded(actual, line_end)
 
 
 def test_folding_output(travis_force, capsys):
