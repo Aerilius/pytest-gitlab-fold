@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from _pytest.legacypath import Testdir
     from _pytest.pytester import RunResult
 
-travis_mark_regexes = ["travis_fold:start:.*", "travis_fold:end:.*"]
+gitlab_mark_regexes = ["gitlab_fold:start:.*", "gitlab_fold:end:.*"]
 
 
 @pytest.fixture
@@ -32,37 +32,37 @@ def test_something():
             marks=pytest.mark.xfail(strict=True, raises=pytest.fail.Exception),
         ),
         pytest.param(
-            ["--travis-fold=auto"],
+            ["--gitlab-fold=auto"],
             marks=pytest.mark.xfail(strict=True, raises=pytest.fail.Exception),
         ),
-        ["--travis-fold=always"],
+        ["--gitlab-fold=always"],
         pytest.param(
-            ["--travis-fold=never"],
+            ["--gitlab-fold=never"],
             marks=pytest.mark.xfail(strict=True, raises=pytest.fail.Exception),
         ),
     ],
 )
-def test_no_travis_env(args, run_failing_test, monkeypatch):
-    """Check cmdline options on a dev env (no TRAVIS variable)."""
-    monkeypatch.delenv("TRAVIS", raising=False)
+def test_no_gitlab_env(args, run_failing_test, monkeypatch):
+    """Check cmdline options on a dev env (no GITLAB_CI variable)."""
+    monkeypatch.delenv("GITLAB_CI", raising=False)
 
-    run_failing_test(*args).stdout.re_match_lines(travis_mark_regexes)
+    run_failing_test(*args).stdout.re_match_lines(gitlab_mark_regexes)
 
 
 @pytest.mark.parametrize(
     "args",
     [
         [],
-        ["--travis-fold=auto"],
-        ["--travis-fold=always"],
+        ["--gitlab-fold=auto"],
+        ["--gitlab-fold=always"],
         pytest.param(
-            ["--travis-fold=never"],
+            ["--gitlab-fold=never"],
             marks=pytest.mark.xfail(strict=True, raises=pytest.fail.Exception),
         ),
     ],
 )
-def test_travis_env(args, run_failing_test, monkeypatch):
-    """Set TRAVIS=true and check the stdout section is properly wrapped."""
-    monkeypatch.setenv("TRAVIS", "true")
+def test_gitlab_env(args, run_failing_test, monkeypatch):
+    """Set GITLAB_CI=true and check the stdout section is properly wrapped."""
+    monkeypatch.setenv("GITLAB_CI", "true")
 
-    run_failing_test(*args).stdout.re_match_lines(travis_mark_regexes)
+    run_failing_test(*args).stdout.re_match_lines(gitlab_mark_regexes)

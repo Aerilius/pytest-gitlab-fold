@@ -3,11 +3,12 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pytest-travis-fold"
+name = "pytest-gitlab-fold"
 authors = [
+    {name = "Andreas Eisenbarth", email = "aerilius@gmail.com"},
     {name = "Eldar Abusalimov", email = "eldar.abusalimov@gmail.com"},
 ]
-description = "Folds captured output sections in Travis CI build log"
+description = "Folds output sections in GitLab CI build log"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 classifiers = [
@@ -26,7 +27,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Testing",
 ]
-keywords = ["pytest", "travis", "build", "logs", "continuous", "integration"]
+keywords = ["pytest", "gitlab", "build", "logs", "continuous", "integration"]
 dependencies = [
     "pytest>=2.6.0",
 ]
@@ -34,22 +35,22 @@ dependencies = [
 dynamic = ["readme", "version"]
 
 [project.entry-points.pytest11]
-travis-fold = "pytest_travis_fold"
+gitlab-fold = "pytest_gitlab_fold"
 
 [project.optional-dependencies]
 test = ["pytest"]
 
 [project.urls]
-Repository = "https://github.com/abusalimov/pytest-travis-fold"
+Repository = "https://github.com/aerilius/pytest-gitlab-fold"
 
 [tool.distutils.bdist_wheel]
 universal = true
 
 [tool.setuptools]
-packages = ["pytest_travis_fold"]
+packages = ["pytest_gitlab_fold"]
 
 [tool.setuptools.dynamic]
-version = {attr = "pytest_travis_fold.__version__"}
+version = {attr = "pytest_gitlab_fold.__version__"}
 readme = {file = "README.md", content-type = "text/markdown"}
 
 [tool.black]
