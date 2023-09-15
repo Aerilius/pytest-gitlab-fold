@@ -5,7 +5,7 @@
 It is a port of Eldar Abusalimov's excellent [pytest-travis-fold][7] plugin,
 all credits go to him and contributors.
 
-![GitLab CI build log view](<>)
+![GitLab CI build log view](docs/screenshot.png)
 
 In addition, pytest-gitlab-fold recognizes presence of the [pytest-cov][5]
 plugin and folds coverage reports accordingly.
