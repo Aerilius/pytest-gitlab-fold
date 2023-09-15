@@ -7,7 +7,8 @@ from __future__ import annotations
 import os
 import re
 import sys
-from collections import defaultdict
+import time
+from collections import Counter
 from collections.abc import Generator
 from contextlib import contextmanager
 from functools import update_wrapper
@@ -24,44 +25,53 @@ if TYPE_CHECKING:
 __version__ = "0.1.0"
 
 
-PUNCT_RE = re.compile(r"\W+")
+SECTION_COUNTER = Counter()
+SECTION_NAME_MAX_LEN = 30
 
 
-def normalize_name(name: str) -> str:
-    """Strip out any "exotic" chars and whitespaces."""
-    return PUNCT_RE.sub("-", name.lower()).strip("-")
+def create_unique_section_name(name: str = "section") -> str:
+    name = re.sub(r"[^A-Za-z0-9]+", "_", name)[:SECTION_NAME_MAX_LEN].lower()
+    SECTION_COUNTER[name] += 1
+    count = SECTION_COUNTER[name]
+    if name == "" or count != 1:
+        name += str(count)
+    return name
 
 
-def get_and_increment(name: str, counter=defaultdict(int)) -> int:
-    """Allocate a new unique number for the given name."""
-    n = counter[name]
-    counter[name] = n + 1
-    return n
+def gitlab_supports_collapsed() -> bool:
+    major = int(os.environ.get("CI_SERVER_VERSION_MAJOR", -1))
+    minor = int(os.environ.get("CI_SERVER_VERSION_MINOR", -1))
+    return (major, minor) >= (13, 5)
 
 
-def section_name(name: str, n: int, prefix: str = f"py-{os.getpid()}") -> str:
-    """Join arguments to get a GitLab section name, e.g. 'py-123.section.0'"""
-    return ".".join(filter(bool, [prefix, name, str(n)]))
+def start_section(
+    name: str,
+    header: str,
+    timestamp: int | None = None,
+    collapsed: bool = False,
+    line_end: str = "",
+) -> str:
+    if timestamp is None:
+        timestamp = int(time.time())
+    if gitlab_supports_collapsed():
+        collapsed_option = f"[collapsed={str(collapsed).lower()}]"
+    else:
+        collapsed_option = ""
+    # Note: ASCII control escape sequences are not guaranteed to work in all
+    # languages. It is recommended to use the decimal, octal or hex
+    # representation as escape code.
+    # Contrary to the example in GitLab documentation at
+    # https://docs.gitlab.com/ee/ci/jobs/#custom-collapsible-sections
+    # we need to use \033 instead of \e to make it work in Python.
+    return f"\033[0Ksection_start:{timestamp}:{name}{collapsed_option}\r\033[0K{header}{line_end}"
 
 
-def section_marks(section: str, line_end: str = "") -> tuple[str, str]:
-    """A pair of start/end GitLab fold marks."""
-    return (
-        f"gitlab_fold:start:{section}{line_end}",
-        f"gitlab_fold:end:{section}{line_end}",
-    )
-
-
-def new_section(name: str) -> str:
-    """Create a new GitLab fold section and return its name."""
-    name = normalize_name(name)
-    n = get_and_increment(name)
-    return section_name(name, n)
-
-
-def new_section_marks(name: str, line_end: str = "") -> tuple[str, str]:
-    """Create a new GitLab fold section and return a pair of fold marks."""
-    return section_marks(new_section(name), line_end)
+def end_section(
+    name: str, timestamp: int | None = None, line_end: str = ""
+) -> str:
+    if timestamp is None:
+        timestamp = int(time.time())
+    return f"\033[0Ksection_end:{timestamp}:{name}\r\033[0K{line_end}"
 
 
 def detect_line_end(string: str, line_end: str | None = None) -> str:
@@ -110,7 +120,10 @@ class GitLabContext:
     def fold_lines(
         self,
         lines: list[str],
-        name: str = "",
+        title: str = "",
+        timestamp_start: int | None = None,
+        timestamp_end: int | None = None,
+        collapsed: bool = False,
         line_end: str | None = None,
         force=None,
     ) -> list[str]:
@@ -146,7 +159,15 @@ class GitLabContext:
         if not self.is_fold_enabled(force):
             return lines
         line_end = detect_line_end(lines[-1] if lines else "", line_end)
-        start_mark, end_mark = new_section_marks(name, line_end)
+        name = create_unique_section_name(title)
+        start_mark = start_section(
+            name,
+            header=title,
+            timestamp=timestamp_start,
+            collapsed=collapsed,
+            line_end=line_end,
+        )
+        end_mark = end_section(name, timestamp=timestamp_end, line_end=line_end)
         folded_lines = [start_mark, end_mark]
         folded_lines[1:1] = lines
         return folded_lines
@@ -154,7 +175,10 @@ class GitLabContext:
     def fold_string(
         self,
         string: str,
-        name: str = "",
+        title: str = "",
+        timestamp_start: int | None = None,
+        timestamp_end: int | None = None,
+        collapsed: bool = False,
         sep: str = "",
         line_end: str | None = None,
         force=None,
@@ -171,12 +195,26 @@ class GitLabContext:
         if not (sep or line_end and string.endswith(line_end)):
             sep = "\n"
         return sep.join(
-            self.fold_lines([string], name, line_end=line_end, force=force)
+            self.fold_lines(
+                [string],
+                title,
+                timestamp_start=timestamp_start,
+                timestamp_end=timestamp_end,
+                collapsed=collapsed,
+                line_end=line_end,
+                force=force,
+            )
         )
 
     @contextmanager
     def folding_output(
-        self, name: str = "", file: IOBase | None = None, force=None
+        self,
+        title: str = "",
+        timestamp_start: int | None = None,
+        timestamp_end: int | None = None,
+        collapsed: bool = False,
+        file: IOBase | None = None,
+        force=None,
     ) -> Generator[str, None, None]:
         """
         Makes the output be folded by the GitLab CI build log view.
@@ -195,12 +233,21 @@ class GitLabContext:
         if file is None:
             file = sys.stdout
 
-        start_mark, end_mark = new_section_marks(name, line_end="\n")
-
+        # Unfortunately, collapsed can only be set in the section start, so we
+        # can not set it depending on the outcome of yield.
+        name = create_unique_section_name(title)
+        start_mark = start_section(
+            name,
+            header=title,
+            timestamp=timestamp_start,
+            collapsed=collapsed,
+            line_end="\n",
+        )
         file.write(start_mark)
         try:
             yield
         finally:
+            end_mark = end_section(name, timestamp=timestamp_end, line_end="\n")
             file.write(end_mark)
 
 
@@ -235,20 +282,21 @@ def pytest_configure(config):
             """
             rep.toterminal(reporter._tw)
             for secname, content in rep.sections:
-                name = secname
+                title = secname
 
                 # Shorten the most common case:
                 # 'Captured stdout call' -> 'stdout'.
-                if name.startswith("Captured "):
-                    name = name[len("Captured ") :]
-                if name.endswith(" call"):
-                    name = name[: -len(" call")]
+                if title.startswith("Captured "):
+                    title = title[len("Captured ") :]
+                if title.endswith(" call"):
+                    title = title[: -len(" call")]
 
                 if content[-1:] == "\n":
                     content = content[:-1]
 
                 with gitlab.folding_output(
-                    name,
+                    title=title,
+                    collapsed=True,
                     file=reporter._tw,
                     # Don't fold if there's nothing to fold.
                     force=(False if not content else None),
