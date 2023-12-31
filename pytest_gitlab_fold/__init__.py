@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 
 SECTION_COUNTER = Counter()
