@@ -2,12 +2,12 @@ name: Test
 
 on:
     push:
-        # Push events to master with version tags, e.g. "v1.0"
-        branches: [master]
+        # Push events to main with version tags, e.g. "v1.0"
+        branches: [main]
         tags:
             - "v**"
     pull_request:
-        branches: [master]
+        branches: [main]
 
 jobs:
     test:
