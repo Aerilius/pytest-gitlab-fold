@@ -38,7 +38,7 @@ dynamic = ["readme", "version"]
 gitlab-fold = "pytest_gitlab_fold"
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["pytest", "pytest-cov"]
 
 [project.urls]
 Repository = "https://github.com/aerilius/pytest-gitlab-fold"
