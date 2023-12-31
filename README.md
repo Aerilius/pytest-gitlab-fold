@@ -1,21 +1,24 @@
 # pytest-gitlab-fold
 
-[Pytest][4] plugin that folds output sections in GitLab CI build log.
+[![Tests][badge-tests]][link-tests]
+[![PyPI][badge-pypi]][link-pypi]
 
-It is a port of Eldar Abusalimov's excellent [pytest-travis-fold][7] plugin,
+[Pytest] plugin that folds output sections in GitLab CI build log.
+
+It is a port of Eldar Abusalimov's excellent [pytest-travis-fold] plugin,
 all credits go to him and contributors.
 
 ![GitLab CI build log view](docs/screenshot.png)
 
-In addition, pytest-gitlab-fold recognizes presence of the [pytest-cov][5]
+In addition, pytest-gitlab-fold recognizes presence of the [pytest-cov]
 plugin and folds coverage reports accordingly.
 
 ## Installation and Usage
 
-Just install the [pytest-gitlab-fold][1] package
+Just install the \[pytest-gitlab-fold\]\[linnk-pypi\] package
 as part of your build.
 
-When using [tox][6], add the package to the `deps` list in your `tox.ini`
+When using [tox], add the package to the `deps` list in your `tox.ini`
 and make sure the `GITLAB_CI` environment variable is passed:
 
 ```ini
@@ -63,23 +66,26 @@ Or you may want to use lower-level `gitlab.fold_string()` and
 
 ## Contributing
 
-Contributions are very welcome. Tests can be run with [tox][6], please ensure
+Contributions are very welcome. Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
 ## License
 
-Distributed under the terms of the [MIT][2] license, "pytest-gitlab-fold" is
+Distributed under the terms of the [MIT][license] license, "pytest-gitlab-fold" is
 free and open source software.
 
 ## Issues
 
-If you encounter any problems, please [file an issue][3] along with a detailed
+If you encounter any problems, please [file an issue][issues] along with a detailed
 description.
 
-[1]: https://pypi.python.org/pypi/pytest-gitlab-fold
-[2]: http://opensource.org/licenses/MIT
-[3]: https://github.com/aerilius/pytest-gitlab-fold/issues
-[4]: https://github.com/pytest-dev/pytest
-[5]: https://github.com/pytest-dev/pytest-cov
-[6]: https://tox.readthedocs.org/en/latest
-[7]: https://github.com/abusalimov/pytest-travis-fold
+[badge-pypi]: https://img.shields.io/pypi/v/pytest-gitlab-fold
+[badge-tests]: https://img.shields.io/github/actions/workflow/status/aerilius/pytest-gitlab-fold/tests.yml?branch=main&label=tests
+[issues]: https://github.com/aerilius/pytest-gitlab-fold/issues
+[license]: http://opensource.org/licenses/MIT
+[link-pypi]: https://pypi.org/project/pytest-gitlab-fold/
+[link-tests]: https://github.com/aerilius/pytest-gitlab-fold/actions/workflows/tests.yml
+[pytest]: https://github.com/pytest-dev/pytest
+[pytest-cov]: https://github.com/pytest-dev/pytest-cov
+[pytest-travis-fold]: https://github.com/abusalimov/pytest-travis-fold
+[tox]: https://tox.readthedocs.org/en/latest
